@@ -1,7 +1,17 @@
-use std::{fs::File, io::{BufReader, BufRead, Read}};
+use std::{fs::File, io::{BufReader, BufRead}};
 
-fn part1(reader: &mut BufReader<File>) {
-    let score: i16 = reader.by_ref().lines()
+fn get_turn_point(turn: &str) -> Option<(i8, i8)> {
+    match turn {
+        "A" | "X" => Some((1,0)), //rock
+        "B" | "Y" => Some((2,2)), //paper
+        "C" | "Z" => Some((3,1)), //scissor
+        _ => None
+    }
+}
+
+fn part1(f: &File) {
+    let score: i16 = BufReader::new(f)
+        .lines()
         .map(|line| line.unwrap())
         .map(|line| {
             let round: Vec<&str> = line.split_ascii_whitespace().collect();
@@ -23,23 +33,35 @@ fn part1(reader: &mut BufReader<File>) {
     println!("{}", score);
 }
 
-fn part2() {
+fn part2(f: &File) {
+    let score: i16 = BufReader::new(f)
+        .lines()
+        .map(|line| line.unwrap())
+        .map(|line| {
+            let round = line.as_bytes();
 
+            /* returns
+            // 0 * 3 => lose
+            // 1 * 3 => draw
+            // 2 * 3 => win */
+            let my_strategy = ((2 - (b'Z' - round[2])) * 3) as i16;
+            let elf_turn = (2 - (b'C' - round[0])) as i16;
+            let my_point = match my_strategy {
+                0 => (elf_turn + 2) % 3 + 1, // (elf_turn - 1) can result in negative, so i used (elf_turn + 2)
+                3 => elf_turn + 1,
+                6 => (elf_turn + 1) % 3 + 1,
+                _ => 0,
+            };
+
+            my_point + my_strategy
+        }).sum();
+
+    println!("{}", score);
 }
 
 fn main() {
     let f = File::open("./input.txt").unwrap();
-    let mut reader = BufReader::new(f);
 
-    part1(&mut reader);
-    part1(&mut reader);
-}
-
-fn get_turn_point(turn: &str) -> Option<(i8, i8)> {
-    match turn {
-        "A" | "X" => Some((1,0)), //rock
-        "B" | "Y" => Some((2,2)), //paper
-        "C" | "Z" => Some((3,1)), //scissor
-        _ => None
-    }
+    // part1(&f);
+    part2(&f);
 }
